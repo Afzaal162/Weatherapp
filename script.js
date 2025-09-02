@@ -1,26 +1,41 @@
-async function getWeather() {
-      const city = document.getElementById("cityInput").value || "London";
-      const apiKey = "ff70b8b6dc4542bab93140247250209";
-      const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=yes`;
+const apiKey = "ff70b8b6dc4542bab93140247250209";
+const weatherCard = document.getElementById("weather-card");
 
-      try {
+async function fetchWeather(city) {
+    try {
+        const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=5`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error("City not found");
-        const data = await response.json();
+        if (!response.ok) throw new Error("API request failed");
 
-        document.getElementById("weatherResult").innerHTML = `
-          <div class="weather-card">
-            <h3>${data.location.name}, ${data.location.country}</h3>
-            <img src="https:${data.current.condition.icon}" alt="Weather Icon">
-            <div class="temperature">${data.current.temp_c}°C</div>
-            <div class="condition">${data.current.condition.text}</div>
-            <p>💧 Humidity: ${data.current.humidity}%</p>
-            <p>🌬 Wind: ${data.current.wind_kph} kph</p>
-          </div>
+        const data = await response.json();
+        console.log(data);
+
+        weatherCard.innerHTML = `
+          <h2>${data.location.name}, ${data.location.country}</h2>
+          <p>Temperature: ${data.current.temp_c}°C</p>
+          <p>Condition: ${data.current.condition.text}</p>
+          <img src="${data.current.condition.icon}" alt="weather icon">
+          <h3>5-Day Forecast:</h3>
+          <ul>
+            ${data.forecast.forecastday.map(day => `
+              <li>
+                ${day.date}: ${day.day.avgtemp_c}°C, ${day.day.condition.text}
+                <img src="${day.day.condition.icon}">
+              </li>
+            `).join("")}
+          </ul>
         `;
-      } catch (error) {
-        document.getElementById("weatherResult").innerHTML = `
-          <p style="color:red;">❌ ${error.message}</p>
-        `;
-      }
+    } catch (error) {
+        weatherCard.innerHTML = `<p class="text-red-500">❌ ${error.message}</p>`;
     }
+}
+
+function getWeather() {
+    const city = document.getElementById("cityInput").value || "London";
+    fetchWeather(city);
+}
+
+// Default weather on load
+window.addEventListener("load", () => {
+    fetchWeather("London");
+});
